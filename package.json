@@ -1,0 +1,22 @@
+{
+  "name": "japyrus",
+  "version": "0.0.0",
+  "description": "japyrus",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pospelove/japyrus.git"
+  },
+  "author": "Pospelov",
+  "license": "CC0-1.0",
+  "bugs": {
+    "url": "https://github.com/Pospelove/japyrus/issues"
+  },
+  "homepage": "https://github.com/Pospelove/japyrus#readme",
+  "dependencies": {
+    "npm": "^6.3.0"
+  }
+}
