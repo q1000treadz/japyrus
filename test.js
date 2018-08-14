@@ -87,6 +87,38 @@ mocha.run(() => {
             console.log(result);
             assert.deepEqual(result, undefined);
          });
+         /*   if (parser == work)
+            Debug.MessageBox("parser work", true)
+            endIf */
+         it('parse if', ()=> {
+           /*
+            let result = japyrus.parseIfBody(
+            `if (kura > shura)
+             Debug.MessageBox("kura > shura", true)
+             elseif (kura == shura)
+             Debug.MessageBox("kura == shura", true)
+             else
+             Debug.MessageBox("kura < shura", true)
+             endIf`);
+            console.log(result);*/
+          //  assert.deepEqual(result, [ { type: 'if',expression: '(kura > shura)',then: [ 'Debug.MessageBox("kura > shura", true)' ] },{ type: 'elseif',expression: '(kura == shura)',  then: [ 'Debug.MessageBox("kura == shura", true)' ] },  { type: 'else',expression: null,  then: [ 'Debug.MessageBox("kura < shura", true)' ] } ]);
+         });
+         it('parse if in if', ()=> {
+            let result = japyrus.parseIf(
+            `if (kura > shura)
+            if (parser == work)
+               Debug.MessageBox("parser work", true)
+               endIf
+             Debug.MessageBox("kura > shura", true)
+             elseif (kura == shura)
+             Debug.MessageBox("kura == shura", true)
+             else
+             Debug.MessageBox("kura < shura", true)
+             endIf`);
+            console.log(result);
+          //  assert.deepEqual(result, [ { type: 'if',expression: '(kura > shura)',then: [ 'Debug.MessageBox("kura > shura", true)' ] },{ type: 'elseif',expression: '(kura == shura)',  then: [ 'Debug.MessageBox("kura == shura", true)' ] },  { type: 'else',expression: null,  then: [ 'Debug.MessageBox("kura < shura", true)' ] } ]);
+         });
+         /*
          it('get variable', ()=> {
            japyrus.varlist.push({ type: 'int', name: 'count', value: '432' });
            japyrus.varlist.push({ type: 'float', name: 'angleX', value: '10.5' });
@@ -94,7 +126,7 @@ mocha.run(() => {
            console.log(japyrus.varlist);
            let result = japyrus.varlist.getVariable('count');
            assert.deepEqual(result, { type: 'int', name: 'count', value: '432' });
-         });
+         });*/
 
      });
 });
