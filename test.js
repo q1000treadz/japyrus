@@ -90,7 +90,13 @@ mocha.run(() => {
          /*   if (parser == work)
             Debug.MessageBox("parser work", true)
             endIf */
-         it('parse if', ()=> {
+         it('parse if 1', ()=> {
+           let result = japyrus.parseIf(`if (parser == work)
+              Debug.MessageBox("parser work", true)
+              endIf`);
+              console.log(result[0].then);
+         });
+         it('parse if 2', ()=> {
            /*
             let result = japyrus.parseIfBody(
             `if (kura > shura)
@@ -104,6 +110,18 @@ mocha.run(() => {
           //  assert.deepEqual(result, [ { type: 'if',expression: '(kura > shura)',then: [ 'Debug.MessageBox("kura > shura", true)' ] },{ type: 'elseif',expression: '(kura == shura)',  then: [ 'Debug.MessageBox("kura == shura", true)' ] },  { type: 'else',expression: null,  then: [ 'Debug.MessageBox("kura < shura", true)' ] } ]);
          });
          it('parse if in if', ()=> {
+
+            let result = japyrus.parseIf(
+            `if (kura > shura)
+            if (parser == work)
+               Debug.MessageBox("parser work", true)
+               endIf
+             Debug.MessageBox("kura > shura", true)
+             endIf`);
+            console.log(result[0].then);
+         });
+         /*
+         it('parse if in if 2', ()=> {
             let result = japyrus.parseIf(
             `if (kura > shura)
             if (parser == work)
@@ -117,7 +135,7 @@ mocha.run(() => {
              endIf`);
             console.log(result);
           //  assert.deepEqual(result, [ { type: 'if',expression: '(kura > shura)',then: [ 'Debug.MessageBox("kura > shura", true)' ] },{ type: 'elseif',expression: '(kura == shura)',  then: [ 'Debug.MessageBox("kura == shura", true)' ] },  { type: 'else',expression: null,  then: [ 'Debug.MessageBox("kura < shura", true)' ] } ]);
-         });
+        });*/
          /*
          it('get variable', ()=> {
            japyrus.varlist.push({ type: 'int', name: 'count', value: '432' });
