@@ -25,38 +25,39 @@ mocha.run(() => {
          it('parse Scriptname', ()=> {
             let testScriptName = ScriptName;
             let result = japyrus.parseScriptname(testScriptName);
-            assert.deepEqual(result, { scriptname: 'AAAMPChest', extends: 'extends' });
+            assert.deepEqual(result, {end: 65, res: { scriptname: 'AAAMPChest', extends: 'extends' }});
          });
          it('parse arguments 1', ()=> {
             let testArguments = "ObjectReference akActionRef";
             let result = japyrus.parseArguments(testArguments);
-            console.log(result);
+            //console.log(result);
             assert.deepEqual(result,  [ { type: 'ObjectReference', name: 'akActionRef' }]);
          });
          it('parse arguments 2', ()=> {
             let testArguments = "ObjectReference akActionRef, ObjectReference akActionRef2";
             let result = japyrus.parseArguments(testArguments);
-            console.log(result);
+            //console.log(result);
             assert.deepEqual(result,  [ { type: 'ObjectReference', name: 'akActionRef' },  { type: 'ObjectReference', name: 'akActionRef2' } ]);
          });
          it('parse certain arguments 1', ()=> {
             let testArguments = `233, "krab", "krab2"`;
             let result = japyrus.parseCertainArguments(testArguments);
-            console.log(result);
+            //console.log(result);
             assert.deepEqual(result,  [ '233', '"krab"', '"krab2"' ]);
          });
          it('parseCallOfFunction', ()=> {
             let testCall = call;
             let result = japyrus.parseCallOfFunction(testCall);
-            console.log(result);
-            assert.deepEqual(result,  { object: 'Debug',  method: 'MessageBox', args: [ '"Hello, World!"' ] });
+          //  console.log(result);
+            assert.deepEqual(result,  {end: 33, res: { object: 'Debug',  method: 'MessageBox', args: [ '"Hello, World!"' ] }});
          });
+         /*
          it('parse Event', ()=> {
             let testEvent = _Event;
             let result = japyrus.parseEvent(testEvent);
             console.log(result);
             assert.deepEqual(result,  { blocktype: 'Event',  name: 'OnActivate',args: [ { type: 'ObjectReference', name: 'akActionRef' } ],body: [{ object: 'Debug',method: 'MessageBox',args: [ '"Hello, World!"', 'true' ] }]});
-         });
+         });*/
          it('parse variable 1', ()=> {
             let testVar = `int count = 432`;
             let result = japyrus.parseVar(testVar);
@@ -84,17 +85,21 @@ mocha.run(() => {
          });
          it('parse wrong data', ()=> {
             let result = japyrus.parseEvent(`Scriptname uncorrect 23 24`);
-            console.log(result);
+          //  console.log(result);
             assert.deepEqual(result, undefined);
          });
          /*   if (parser == work)
             Debug.MessageBox("parser work", true)
             endIf */
          it('parse if 1', ()=> {
-           let result = japyrus.parseIf(`if (parser == work)
+           let result = japyrus.applyFunction(`if (parser == work)
               Debug.MessageBox("parser work", true)
               endIf`);
-              console.log(result[0].then);
+              console.log(result.res[0]);
+              assert.deepEqual(result,{ res:[ { type: 'if', expression: '(parser == work)', then: [ { object: 'Debug', method: 'MessageBox', args: [ '"parser work"', 'true' ] } ] }], end: 91 });
+            /*  assert.deepEqual(result,[ { object: 'Debug',
+    method: 'MessageBox',
+    args: [ '"parser work"', 'true' ] } ]*/
          });
          it('parse if 2', ()=> {
            /*
@@ -110,15 +115,21 @@ mocha.run(() => {
           //  assert.deepEqual(result, [ { type: 'if',expression: '(kura > shura)',then: [ 'Debug.MessageBox("kura > shura", true)' ] },{ type: 'elseif',expression: '(kura == shura)',  then: [ 'Debug.MessageBox("kura == shura", true)' ] },  { type: 'else',expression: null,  then: [ 'Debug.MessageBox("kura < shura", true)' ] } ]);
          });
          it('parse if in if', ()=> {
+           //japyrus.caller.length = 0;
+            let result = japyrus.applyFunction(
+            `if kura > shura
 
-            let result = japyrus.parseIf(
-            `if (kura > shura)
-            if (parser == work)
+               if (parser == work)
                Debug.MessageBox("parser work", true)
+               else
+               Debug.MessageBox("parser don't work", true)
                endIf
+
              Debug.MessageBox("kura > shura", true)
              endIf`);
-            console.log(result[0].then);
+            console.log(result.res);
+             //assert.deepEqual(result, {res : [ { type: 'if',  expression: 'kura > shura',then: [ [ { type: 'if', expression: '(parser == work)', then: [Array] },{ type: 'else', expression: null, then: [Array] } ],{ object: 'Debug',  method: 'MessageBox',   args: [ '"kura > shura"', 'true' ] } ]}], end: 278});
+            //console.log(japyrus.caller);
          });
          /*
          it('parse if in if 2', ()=> {

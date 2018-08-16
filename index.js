@@ -8,8 +8,6 @@ japyrus.helloTamriel = function() {
     return 'HelloTamriel';
 };
 
-//module.exports = japyrus;
-
 // next part of this file was copied from https://m.habr.com/post/224081/
 
 japyrus.Pattern = function(exec) {
@@ -92,49 +90,11 @@ japyrus.findNumber = japyrus.rgx(/\d+/i);
 japyrus.findVarName = japyrus.rgx(/[\d\w_]+/i);
 japyrus.findVarArg = japyrus.rgx(/[\d\w,".!@#№;$%^:?&*()-_+=~]+/i);
 
-/*
-class variable {
-  var variableList = [];
-
-  getVariable(name) {
-     for(let i = 0; i<this.variableList.length; i++)
-     {
-        if(this.variableList[i].name == name)
-        {
-           return this.variableList[i];
-        }
-     }
-  }
-  push(variable) {
-    this.variableList.push(variable);
-  }
-
-}
-
-japyrus.vars = new variable();
-*/
-/*
-japyrus.varlist = [];
-japyrus.varlist.getVariable = function(name){
-    for(let i = 0; i<japyrus.varlist.length; i++)
-    {
-       if(japyrus.varlist[i].name == name)
-       {
-         return japyrus.varlist[i];
-       }
-    }
-    return undefined;
-}*/
-//japyrus.varlist.push = function(variable){
-  //  japyrus.varlist.push(variable);
-//}
-
 japyrus.isString = function(str) {
     if(str[0] == `"` && str[str.length-1] == `"`) return true;
     return false;
 }
 
-//japyrus.isInteger = Number.isInteger;
 japyrus.isInt = function(n){
     return Number(n) === n && n % 1 === 0;
 }
@@ -150,11 +110,12 @@ japyrus.isVarValueCorrect = function(type, value) {
     if(type.toLowerCase() == "bool" && typeof(value) == typeof(true)) return true;
     return false;
 }
-
+japyrus.caller = [];
 japyrus.applyFunction = function(str) {
     if(japyrus.parseScriptname(str) != undefined) return japyrus.parseScriptname(str);
     if(japyrus.parseCallOfFunction(str) != undefined) return japyrus.parseCallOfFunction(str);
     if(japyrus.isIf(str) != undefined) return japyrus.parseIf(str);
+    japyrus.caller.push(str);
     return "ERROR";
 }
 
@@ -165,7 +126,7 @@ japyrus.parseScriptname = function(str) {
     let assertResult = {};
     assertResult.scriptname = res1.res[2];
     assertResult.extends = res1.res[4];
-    return assertResult;
+    return {res: assertResult, end: res1.end };
 }
 
 japyrus.parseArguments = function(str) {
@@ -220,14 +181,14 @@ japyrus.parseCertainArguments = function(str) {
 
 japyrus.parseCallOfFunction = function(str) {
     let result = {};
-    let reg = japyrus.seq(japyrus.findOptionalSpace, japyrus.findWord,japyrus.txt('.'), japyrus.findWord);
+    let expression = japyrus.rgx(/\(([^)]+)\)/i);
+    let reg = japyrus.seq(japyrus.findOptionalSpace, japyrus.findWord,japyrus.txt('.'), japyrus.findWord, expression);
     let res = reg.exec(str,0);
     if(res == undefined) return undefined;
     result.object = res.res[1];
     result.method = res.res[3];
-    result.args = japyrus.parseCertainArguments(str.slice(res.end+1,str.length-1));
-      return { res: result, end: pos + text.length };
-    return result;
+    result.args = japyrus.parseCertainArguments(res.res[4].slice(1,-1));
+    return { res: result, end: res.end };
 }
 /*
 Event OnActivate(ObjectReference akActionRef)
@@ -289,7 +250,7 @@ japyrus.parseVar = function(str) {
 
 japyrus.isIf = function(str) {
   let expression = japyrus.rgx(/\([^()]+\)/i); //если внутри if (), то не парсится, исправить(написать нормальное выражение)!
-  let reg = japyrus.seq(japyrus.findOptionalSpace, japyrus.txt('if'), japyrus.findOptionalSpace, expression);
+  let reg = japyrus.seq(japyrus.findOptionalSpace, japyrus.txt('if'), japyrus.any(japyrus.findSpace, japyrus.txt("(")));//, japyrus.findOptionalSpace, expression);
   let res = reg.exec(str, 0);
   if(res == undefined) return undefined;
   else return true;
@@ -297,46 +258,62 @@ japyrus.isIf = function(str) {
 
 japyrus.parseIfBody = function(_str, start, end) {
   let str = _str.slice(start,end);
-  let expression = japyrus.rgx(/\([^()]+\)/i); //если внутри if (), то не парсится, исправить(написать нормальное выражение)!
+  console.log(str.length);
+  let expression = japyrus.rgx(/\([^()]+\)/i);
   let result = [];
-  let reg = japyrus.seq(japyrus.findOptionalSpace, japyrus.txt('if'), japyrus.findOptionalSpace, expression);
+  let reg = japyrus.seq(japyrus.findOptionalSpace, japyrus.txt('if')/*, japyrus.findOptionalSpace, expression*/);
   let res = reg.exec(str, 0);
-  console.log(res);
+  //console.log(res);
   if(res == undefined) return undefined;
-  let body = str.slice(res.end);
-  body = body.trim().split('\n');
+  let endOfLine = str.indexOf('\n');
+  let body = str.slice(endOfLine);
+  console.log(body.length);
+  body = body.trim();//.split('\n');
+  console.log('expr  ' + str.slice(res.end, endOfLine).trim());
   let ress = {};
   ress.type =  'if';
-  ress.expression = res.res[3];
+  ress.expression = str.slice(res.end, endOfLine).trim();//res.res[3];
   ress.then = [];
   result.push(ress);
-  for(let i=0; i<body.length; i++)
+  let i = 0;
+  console.log(body.length);
+  while(i<body.length)
   {
       let _reg = japyrus.seq(japyrus.findOptionalSpace, japyrus.any(japyrus.seq(japyrus.txt('elseif'), japyrus.findOptionalSpace, expression), japyrus.txt('else')));
-      let _res = _reg.exec(body[i], 0);
+      let _res = _reg.exec(body.slice(i), 0);
       if(_res != undefined)
       {
-          console.log(_res);
+          //console.log(_res);
         if(_res.res[1] == 'else')
         {
           let res1 = {};
           res1.type =  'else';
           res1.expression = null;
           res1.then = [];
-          console.log(res1);
+        //  console.log(res1);
           result.push(res1);
         } else if (_res.res[1][0] == 'elseif') {
           let res1 = {};
           res1.type =  'elseif';
           res1.expression = _res.res[1][2];
           res1.then = [];
-          console.log(res1);
+          //console.log(res1);
           result.push(res1);
         }
+        i+=_res.end;
       } else {
-        result[result.length-1].then.push(japyrus.applyFunction(body[i].trim())); //need to parse body
+        let sres = japyrus.applyFunction(body.slice(i));
+        if(sres!="ERROR")  //TODO: throw error, if parser not work
+        {
+           result[result.length-1].then.push(sres.res);
+           console.log(sres/*i + sres.end+ ' ' + +body.length*/);
+           i+=sres.end;
+        } else {
+
+        }
       }
     }
+    //console.log(result);
     return result;
 }
 
@@ -352,25 +329,40 @@ japyrus.parseIf = function(str) {
   */
   let ifs = [];
   let endifs = [];
-//  let pos = -1;
-  /*
-  while(str.indexOf('if', pos + 1)!= -1 && str.indexOf('endIf', pos + 1)!= -1) {
 
-    if(ifs.length == endifs.length && ifs.length!=0 && endifs.length!=0) {
-      break;
-    }
-    console.log(str.indexOf('if', pos + 1), str.indexOf('endIf', pos + 1));
-    if(str.indexOf('if', pos + 1) < str.indexOf('endIf', pos + 1)) {
+  let pos = str.indexOf('if', 0);
+  //console.log(pos);
+  if(pos!=0)
+  {
+  if(pos == -1 || str.charAt(pos-1 ) != ' ') return undefined;
+  }
+  let t = 1;
+  ifs.push(pos);
+
+  while(str.indexOf('if', pos + 1)!= -1 || str.indexOf('endIf', pos + 1)!= -1) {
+
+    if(t == 0) break;
+    let closeIf = str.indexOf('if', pos + 1);
+    let closeEndIf = str.indexOf('endIf', pos + 1);
+    if(closeIf == -1 || str.charAt(closeIf-1) == ' ')
+    {
+      if(closeIf == -1 && closeEndIf!=-1) {
+        t--;
+        pos = closeEndIf;
+        endifs.push(pos);
+      } else if(closeIf < closeEndIf) {
         pos = str.indexOf('if', pos + 1);
-      if(pos == 0 || str.charAt(pos-1) == ' ') {
         ifs.push(pos);
+        t++;
+      } else {
+        t--;
+        pos = closeEndIf;
+        endifs.push(pos);
       }
-    } else {
-      pos = str.indexOf('endIf', pos + 1);
-      endifs.push(pos);
     }
-  }*/
+  }
   //console.log(ifs);
+/*
   let pos = -1;
   while ((pos = str.indexOf('if', pos + 1)) != -1) {
     console.log(ifs[pos-1]);
@@ -382,41 +374,11 @@ japyrus.parseIf = function(str) {
   while ((pos = str.indexOf('endIf', pos + 1)) != -1) {
     endifs.push(pos);
   }
-
-  console.log(ifs);
-  console.log(endifs);
-  return { res: japyrus.parseIfBody(str, ifs[0], endifs[endifs.length - 1]), end: pos + text.length }; ///доделать end
-
-  //if(ifs.length != endifs.length) return undefined;
-
-/*
-  let end;
-  for(;;)
-  {
-      let _if = 0;
-      let _endif = 0;
-      if(_if == _endif && _endif!=0 && _if!=0)
-      {
-        end = endifs[_endif];
-        break;
-      }
-      if(ifs[_if]<endif[_endif])
-      {
-
-      }
-  } */
-
-
-
-
-
-
-
-
-
-
-
-
-
+  */
+  //console.log(ifs);
+//  console.log(endifs);
+  //return japyrus.parseIfBody(str, ifs[0], endifs[endifs.length - 1]);
+console.log(endifs);
+  return { res: japyrus.parseIfBody(str, ifs[0], endifs[endifs.length - 1]), end: endifs[endifs.length - 1] + 5 }; //+5 - length of 'endIf'
 }
 module.exports = japyrus;
